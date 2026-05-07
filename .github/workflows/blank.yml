@@ -1,0 +1,32 @@
+name: Compress only first image (01.jpg)
+
+on:
+  push:
+    paths:
+      - '**/01.jpg'
+
+jobs:
+  compress:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install ImageMagick
+        run: sudo apt-get install -y imagemagick
+
+      - name: Compress only 01.jpg files
+        run: |
+          find . -type f -name "01.jpg" | while read img; do
+            echo "Compressing $img"
+            convert "$img" -resize 800x800 -quality 65 "$img"
+          done
+
+      - name: Commit changes
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add .
+          git commit -m "Auto compress 01.jpg" || echo "No changes"
+          git push
