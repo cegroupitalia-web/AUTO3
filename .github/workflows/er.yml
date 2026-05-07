@@ -14,35 +14,28 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Debug structure
-        run: |
-          echo "=== ROOT ==="
-          ls -R
-
       - name: Install ImageMagick
         run: |
           sudo apt-get update
           sudo apt-get install -y imagemagick
 
-      - name: Apply watermark (debug)
+      - name: Apply watermark
         run: |
-          echo "=== CHECK LOGO ==="
-          find . -name "logo.png"
+          cd MACRO
 
-          echo "=== FIND IMAGES ==="
-          find . -type f -iname "*.jpg"
-
-          find . -type f -iname "*.jpg" | while read img; do
+          find . -type f \( -iname "*.jpg" -o -iname "*.png" \) | while read img; do
             echo "Processing: $img"
 
-            convert "$img" assets/logo.png \
+            convert "$img" ../assetslogo.png \
               -gravity southeast \
               -geometry +15+15 \
-              -composite "$img" || echo "FAILED: $img"
+              -composite "$img"
           done
 
       - name: Commit changes
         run: |
+          cd MACRO
+
           git config user.name "github-actions"
           git config user.email "actions@github.com"
 
@@ -50,5 +43,5 @@ jobs:
 
           git diff --cached --quiet && echo "NO CHANGES" && exit 0
 
-          git commit -m "watermark debug"
+          git commit -m "watermark applied"
           git push
