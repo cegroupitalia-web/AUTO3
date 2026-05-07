@@ -3,6 +3,9 @@ name: Watermark Images
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   watermark:
     runs-on: ubuntu-latest
@@ -16,13 +19,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y imagemagick
 
-      - name: Apply watermark to all images
+      - name: Apply watermark safely
         run: |
           find . -type f \( -iname "*.jpg" -o -iname "*.png" \) | while read img; do
-            convert "$img" assets/logo.png \
-              -gravity southeast \
-              -geometry +12+12 \
-              -composite "$img"
+            if [ -f "$img" ]; then
+              convert "$img" assets/logo.png \
+                -gravity southeast \
+                -geometry +12+12 \
+                -composite "$img" || echo "skip $img"
+            fi
           done
 
       - name: Commit changes safely
@@ -33,7 +38,7 @@ jobs:
           git add -A
 
           if git diff --cached --quiet; then
-            echo "No changes to commit"
+            echo "No changes"
             exit 0
           fi
 
