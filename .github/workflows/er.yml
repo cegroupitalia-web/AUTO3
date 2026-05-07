@@ -1,0 +1,46 @@
+name: Watermark Images
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  watermark:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install ImageMagick
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
+
+      - name: Apply watermark safely
+        run: |
+          find . -type f \( -iname "*.jpg" -o -iname "*.png" \) | while read img; do
+            if [ -f "$img" ]; then
+              convert "$img" assets/logo.png \
+                -gravity southeast \
+                -geometry +12+12 \
+                -composite "$img" || echo "skip $img"
+            fi
+          done
+
+      - name: Commit changes safely
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+
+          git commit -m "Add watermark to images"
+          git push
