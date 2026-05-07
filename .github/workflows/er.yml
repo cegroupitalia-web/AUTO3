@@ -12,26 +12,30 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install ImageMagick
-        run: sudo apt-get update && sudo apt-get install -y imagemagick
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
 
-      - name: Apply watermark
+      - name: Apply watermark to all images
         run: |
           find . -type f \( -iname "*.jpg" -o -iname "*.png" \) | while read img; do
-            magick "$img" assets/logo.png \
+            convert "$img" assets/logo.png \
               -gravity southeast \
               -geometry +12+12 \
-              -compose over \
               -composite "$img"
           done
 
-      - name: Commit safely
+      - name: Commit changes safely
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
 
           git add -A
 
-          git diff --cached --quiet && echo "No changes" && exit 0
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
 
           git commit -m "Add watermark to images"
           git push
