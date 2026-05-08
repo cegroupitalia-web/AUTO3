@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Scarica tutta la cronologia per evitare conflitti
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -30,4 +32,7 @@ jobs:
           git config --local user.name "GitHub Action"
           git add .
           git commit -m "Watermark applicato a tutti i prodotti" || echo "Nessuna modifica"
-          git push
+          # Sincronizza con il server prima di caricare
+          git pull --rebase origin main
+          # Carica tutto forzatamente
+          git push --force origin main
