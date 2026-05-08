@@ -19,28 +19,29 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y imagemagick
 
-      - name: Apply watermark safely
+      - name: Apply watermark
         run: |
-          find . -type f \( -iname "*.jpg" -o -iname "*.png" \) | while read img; do
-            if [ -f "$img" ]; then
-              convert "$img" assets/logo.png \
-                -gravity southeast \
-                -geometry +12+12 \
-                -composite "$img" || echo "skip $img"
-            fi
+          LOGO="./assetslogo.png"
+
+          test -f "$LOGO" || (echo "LOGO NOT FOUND" && exit 1)
+
+          find "./AUTO 3" -type f \( -iname "*.jpg" -o -iname "*.png" \) | while read img; do
+            echo "Processing: $img"
+
+            magick "$img" "$LOGO" \
+              -gravity southeast \
+              -geometry +15+15 \
+              -composite "$img"
           done
 
-      - name: Commit changes safely
+      - name: Commit changes
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
 
           git add -A
 
-          if git diff --cached --quiet; then
-            echo "No changes"
-            exit 0
-          fi
+          git diff --cached --quiet && echo "NO CHANGES" && exit 0
 
-          git commit -m "Add watermark to images"
+          git commit -m "watermark applied"
           git push
