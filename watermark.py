@@ -1,81 +1,72 @@
 import os
 from PIL import Image, ImageDraw, ImageFont
 
-def applica_watermark_finale():
+def applica_watermark_decisivo():
     base_path = os.getcwd()
     watermark_path = os.path.join(base_path, 'watermark.png')
     testo_pattern = "cegroupitalia"
 
-    print("--- AVVIO ELABORAZIONE: LOGO SINGOLO (10%) + PATTERN TESTO DECISO ---")
-
-    # 1. Prepariamo il logo singolo
-    wm_logo = None
-    if os.path.exists(watermark_path):
-        wm_logo = Image.open(watermark_path).convert("RGBA")
+    print(f"Cartella di lavoro attuale: {base_path}")
+    
+    if not os.path.exists(watermark_path):
+        print("!!! ERRORE CRITICO: watermark.png NON TROVATO nella root !!!")
+        # Non fermiamo tutto, proviamo almeno a fare le scritte
     else:
-        print("ERRORE: watermark.png non trovato!")
+        print("Logo watermark.png trovato correttamente.")
 
     count = 0
+    # Estensioni permesse
+    valid_extensions = ('.jpg', '.jpeg', '.png', '.webp')
+
     for root, dirs, files in os.walk(base_path):
+        # Salta cartelle di sistema
         if '.git' in root or '.github' in root:
             continue
             
         for file in files:
-            if file.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')) and file != 'watermark.png':
+            if file.lower().endswith(valid_extensions) and file != 'watermark.png':
                 img_path = os.path.join(root, file)
                 
                 try:
                     with Image.open(img_path).convert("RGBA") as base:
-                        
-                        # --- A. CREAZIONE PATTERN TESTO (PIÙ GRANDE E ACCENTUATO) ---
+                        # --- PATTERN TESTO GRANDE E VISIBILE ---
                         txt_layer = Image.new('RGBA', base.size, (0,0,0,0))
                         d = ImageDraw.Draw(txt_layer)
                         
-                        # Font più grande (5% della larghezza foto invece di 3%)
-                        font_size = int(base.width * 0.05) 
-                        # Opacità aumentata a 60 (più visibile)
-                        colore_testo = (0, 0, 0, 60) 
+                        # Font 6% della larghezza (bello grande)
+                        font_size = int(base.width * 0.06) 
+                        colore_testo = (0, 0, 0, 90) # Opacità decisa (90 su 255)
                         
                         try:
-                            # Carica font standard
                             font = ImageFont.load_default()
                         except:
                             font = ImageFont.load_default()
 
-                        # Distribuiamo le scritte con più spazio per non affollare
-                        for x in range(0, base.width, font_size * 5):
-                            for y in range(0, base.height, font_size * 4):
-                                shift = (y // (font_size * 4)) % 2 * (font_size * 2)
-                                d.text((x + shift, y), testo_pattern, fill=colore_testo, font=font)
+                        for x in range(0, base.width, font_size * 4):
+                            for y in range(0, base.height, font_size * 3):
+                                d.text((x, y), testo_pattern, fill=colore_testo, font=font)
                         
-                        # Fondiamo il testo sulla foto
                         base = Image.alpha_composite(base, txt_layer)
 
-                        # --- B. APPLICAZIONE LOGO SINGOLO (10%) ---
-                        if wm_logo:
-                            # Dimensione impostata al 10%
-                            w_width = int(base.width * 0.10)
-                            w_height = int(wm_logo.height * (w_width / wm_logo.width))
-                            wm_resized = wm_logo.resize((w_width, w_height), Image.Resampling.LANCZOS)
-                            
-                            # Posizione UNICA: Basso a destra
-                            pos = (base.width - w_width - 30, base.height - w_height - 30)
-                            base.paste(wm_resized, pos, wm_resized)
+                        # --- LOGO SINGOLO AL 10% ---
+                        if os.path.exists(watermark_path):
+                            with Image.open(watermark_path).convert("RGBA") as wm_logo:
+                                w_width = int(base.width * 0.10)
+                                w_height = int(wm_logo.height * (w_width / wm_logo.width))
+                                wm_resized = wm_logo.resize((w_width, w_height), Image.Resampling.LANCZOS)
+                                pos = (base.width - w_width - 40, base.height - w_height - 40)
+                                base.paste(wm_resized, pos, wm_resized)
 
-                        # --- C. SALVATAGGIO ---
-                        # Convertiamo in RGB per salvare come JPEG
-                        base.convert("RGB").save(img_path, "JPEG", quality=90)
-                        print(f"Completata: {file}")
+                        # SALVATAGGIO FORZATO
+                        base.convert("RGB").save(img_path, "JPEG", quality=95)
+                        print(f"MODIFICATO: {file}")
                         count += 1
-                        
                 except Exception as e:
                     print(f"Errore su {file}: {e}")
 
-    print(f"--- FINE --- Elaborati {count} file con successo.")
+    print(f"--- FINE --- File totali modificati: {count}")
 
 if __name__ == "__main__":
-    applica_watermark_finale()
-    print(f"--- FINE --- Elaborati {count} file.")
-
+    applica_watermark_decisivo()
 if __name__ == "__main__":
     applica_tutto()
