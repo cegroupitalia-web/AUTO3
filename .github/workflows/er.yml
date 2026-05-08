@@ -1,4 +1,4 @@
-name: Watermark AUTO3 FINAL
+name: WATERMARK PROOF
 
 on:
   workflow_dispatch:
@@ -19,27 +19,29 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y imagemagick
 
-      - name: Apply watermark
+      - name: FORCE visible watermark
         run: |
-          find "AUTO3" -type f \( -iname "*.jpg" -o -iname "*.png" \) | while read img; do
-            echo "Processing: $img"
+          find "AUTO3" -type f -iname "01.jpg" | while read img; do
+            echo "PROCESSING: $img"
 
             magick "$img" \
-              -gravity southeast \
-              -fill "red" \
-              -pointsize 55 \
-              -annotate +10+10 "TEST WATERMARK" \
+              -gravity center \
+              -fill "rgba(255,0,0,0.7)" \
+              -stroke black \
+              -strokewidth 3 \
+              -pointsize 80 \
+              -annotate 0 "WATERMARK TEST" \
               "$img"
+
+            echo "DONE: $img"
           done
 
-      - name: Commit changes
+      - name: Commit
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
 
           git add -A
-
-          git diff --cached --quiet && echo "NO CHANGES" && exit 0
-
-          git commit -m "watermark final"
+          git diff --cached --quiet && exit 0
+          git commit -m "FORCED watermark test"
           git push
