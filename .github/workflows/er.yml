@@ -1,4 +1,4 @@
-name: Watermark Images
+name: WATERMARK FINAL STABLE
 
 on:
   workflow_dispatch:
@@ -19,19 +19,23 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y imagemagick
 
-      - name: Apply watermark
+      - name: APPLY WATERMARK SAFE MODE
         run: |
-          LOGO="./assetslogo.png"
+          find "AUTO3" -type f -iname "01.jpg" | while read img; do
+            echo "PROCESSING: $img"
 
-          test -f "$LOGO" || (echo "LOGO NOT FOUND" && exit 1)
+            OUT="${img%.jpg}_wm.jpg"
 
-          find "./AUTO 3" -type f \( -iname "*.jpg" -o -iname "*.png" \) | while read img; do
-            echo "Processing: $img"
+            magick "$img" \
+              -gravity center \
+              -fill "rgba(255,0,0,0.7)" \
+              -stroke black \
+              -strokewidth 4 \
+              -pointsize 90 \
+              -annotate 0 "WATERMARK TEST" \
+              "$OUT"
 
-            magick "$img" "$LOGO" \
-              -gravity southeast \
-              -geometry +15+15 \
-              -composite "$img"
+            mv "$OUT" "$img"
           done
 
       - name: Commit changes
@@ -43,5 +47,5 @@ jobs:
 
           git diff --cached --quiet && echo "NO CHANGES" && exit 0
 
-          git commit -m "watermark applied"
+          git commit -m "FINAL watermark fix"
           git push
