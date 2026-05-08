@@ -1,15 +1,12 @@
 import os
 from PIL import Image, ImageDraw, ImageFont
 
-def applica_watermark_maxi():
+def applica_watermark_ultra_giant():
     base_path = os.getcwd()
     watermark_path = os.path.join(base_path, 'watermark.png')
     testo_pattern = "cegroupitalia"
 
-    print("--- AVVIO: SCRITTE 5X PIÙ GRANDI + LOGO 10% ---")
-
-    if not os.path.exists(watermark_path):
-        print("AVVISO: watermark.png non trovato, procedo solo con testo.")
+    print("--- MODALITÀ ULTRA GIGANTE ATTIVATA ---")
 
     count = 0
     for root, dirs, files in os.walk(base_path):
@@ -22,25 +19,28 @@ def applica_watermark_maxi():
                 
                 try:
                     with Image.open(img_path) as img:
-                        # Pulizia base
-                        base = img.convert("RGBA")
+                        # Reset per appiattire i vecchi loghi
+                        base = img.convert("RGB").convert("RGBA")
                         
-                        # --- 1. PATTERN TESTO GIGANTE (35% della larghezza) ---
+                        # --- 1. PATTERN TESTO "MONSTRO" ---
                         txt_layer = Image.new('RGBA', base.size, (0,0,0,0))
                         d = ImageDraw.Draw(txt_layer)
                         
-                        # Font 5 volte più grande (era 0.07, ora 0.35)
-                        font_size = int(base.width * 0.35) 
-                        colore_testo = (0, 0, 0, 70) # Opacità media
+                        # Grandezza esagerata: 80% della larghezza della foto per ogni scritta
+                        font_size = int(base.width * 0.80) 
+                        
+                        # Opacità molto alta (160 su 255 è quasi nero pieno)
+                        colore_testo = (0, 0, 0, 160) 
                         
                         try:
                             font = ImageFont.load_default()
                         except:
                             font = ImageFont.load_default()
 
-                        # Distribuzione larga per scritte giganti
-                        for x in range(-font_size, base.width, font_size):
-                            for y in range(-font_size, base.height, font_size):
+                        # Griglia molto larga perché le scritte sono enormi
+                        # Ne mettiamo poche ma giganti che coprono tutto
+                        for x in range(-font_size // 2, base.width, font_size):
+                            for y in range(-font_size // 2, base.height, font_size // 2):
                                 d.text((x, y), testo_pattern, fill=colore_testo, font=font)
                         
                         base = Image.alpha_composite(base, txt_layer)
@@ -51,18 +51,18 @@ def applica_watermark_maxi():
                                 w_width = int(base.width * 0.10)
                                 w_height = int(wm_logo.height * (w_width / wm_logo.width))
                                 wm_resized = wm_logo.resize((w_width, w_height), Image.Resampling.LANCZOS)
-                                pos = (base.width - w_width - 30, base.height - w_height - 30)
+                                pos = (base.width - w_width - 20, base.height - w_height - 20)
                                 base.paste(wm_resized, pos, wm_resized)
 
                         # --- 3. SALVATAGGIO ---
-                        base.convert("RGB").save(img_path, "JPEG", quality=90)
-                        print(f"OK: {file}")
+                        base.convert("RGB").save(img_path, "JPEG", quality=95)
+                        print(f"ULTRA-WATERMARK: {file}")
                         count += 1
                         
                 except Exception as e:
                     print(f"Errore su {file}: {e}")
 
-    print(f"--- FINE --- Elaborati {count} file.")
+    print(f"--- FINE --- {count} immagini stravolte.")
 
 if __name__ == "__main__":
-    applica_watermark_maxi()
+    applica_watermark_ultra_giant()
