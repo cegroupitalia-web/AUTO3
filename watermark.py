@@ -1,50 +1,25 @@
 import os
-from PIL import Image
 
-def aggiungi_watermark():
+def diagnosi():
+    print("--- DIAGNOSI CARTELLE ---")
     base_path = os.getcwd()
-    # Entrata e Uscita puntano entrambe a AUTO3
-    input_folder = os.path.join(base_path, 'AUTO3')
-    watermark_path = os.path.join(base_path, 'watermark.png')
-
-    print(f"--- INIZIO SOVRASCRITTURA ---")
+    print(f"Directory attuale: {base_path}")
     
-    if not os.path.exists(input_folder):
-        print(f"ERRORE: Cartella 'AUTO3' non trovata!")
-        return
-
-    if not os.path.exists(watermark_path):
-        print(f"ERRORE: File 'watermark.png' non trovato!")
-        return
-
-    wm = Image.open(watermark_path).convert("RGBA")
-    count = 0
-
-    for root, dirs, files in os.walk(input_folder):
-        for file in files:
-            if file.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
-                img_path = os.path.join(root, file)
-                
-                try:
-                    with Image.open(img_path).convert("RGBA") as base:
-                        # Dimensioni watermark (20% della larghezza foto)
-                        w_width = int(base.width * 0.20)
-                        w_height = int(wm.height * (w_width / wm.width))
-                        wm_resized = wm.resize((w_width, w_height), Image.Resampling.LANCZOS)
-
-                        # Posizione (Basso a destra)
-                        pos = (base.width - w_width - 20, base.height - w_height - 20)
-                        base.paste(wm_resized, pos, wm_resized)
-                        
-                        # SOVRASCRIVE IL FILE ORIGINALE
-                        base.convert("RGB").save(img_path, "JPEG", quality=90)
-                        print(f"Sovrascritta: {file}")
-                        count += 1
-                except Exception as e:
-                    print(f"Errore su {file}: {e}")
-
-    print(f"--- FINE ---")
-    print(f"Totale immagini modificate: {count}")
+    # Elenca tutto quello che c'è nella cartella principale
+    contenuto = os.listdir(base_path)
+    print(f"File e cartelle trovati nella root: {contenuto}")
+    
+    # Prova a cercare AUTO3 in modo intelligente (senza badare a maiuscole/minuscole)
+    trovata = False
+    for voce in contenuto:
+        if voce.lower() == 'auto3':
+            print(f"AVVISO: Ho trovato una cartella che somiglia ad AUTO3, si chiama: '{voce}'")
+            sotto_contenuto = os.listdir(os.path.join(base_path, voce))
+            print(f"Contenuto di questa cartella: {sotto_contenuto[:5]}... (primi 5 file)")
+            trovata = True
+            
+    if not trovata:
+        print("ERRORE CRITICO: Non esiste nessuna cartella chiamata AUTO3 o simili!")
 
 if __name__ == "__main__":
-    aggiungi_watermark()
+    diagnosi()
