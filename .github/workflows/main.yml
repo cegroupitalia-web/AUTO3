@@ -21,13 +21,13 @@ jobs:
       - name: Install Pillow
         run: pip install Pillow
 
-      - name: Esegui Script
+      - name: Esegui Diagnosi e Script
         run: python watermark.py
 
-      - name: Salva modifiche in AUTO3
+      - name: Prova a salvare (se ci sono modifiche)
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add AUTO3/
-          git commit -m "Watermark applicato e file sovrascritti" || echo "Nessuna modifica"
-          git push
+          git add -A
+          git commit -m "Aggiornamento foto" || echo "Nessuna modifica da salvare"
+          git push || echo "Push fallito o non necessario"
