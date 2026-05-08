@@ -1,4 +1,4 @@
-name: Watermark TEST
+name: Watermark ONLY 01
 
 on:
   workflow_dispatch:
@@ -19,27 +19,26 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y imagemagick
 
-      - name: Apply TEXT watermark
+      - name: Watermark 01 only
         run: |
-          find "./AUTO 3" -type f \( -iname "*.jpg" -o -iname "*.png" \) | while read img; do
+          find "./AUTO3" -type f -iname "01.jpg" | while read img; do
             echo "Processing: $img"
 
             magick "$img" \
               -gravity southeast \
               -fill "red" \
-              -pointsize 40 \
-              -annotate +10+10 "TEST WATERMARK" \
+              -pointsize 50 \
+              -annotate +10+10 "TEST" \
               "$img"
           done
 
-      - name: Commit changes
+      - name: Commit
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
 
           git add -A
+          git diff --cached --quiet && exit 0
 
-          git diff --cached --quiet && echo "NO CHANGES" && exit 0
-
-          git commit -m "test watermark"
+          git commit -m "watermark 01 only"
           git push
