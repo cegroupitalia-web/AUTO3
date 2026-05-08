@@ -1,4 +1,4 @@
-name: Watermark Debug
+name: Watermark Images
 
 on:
   workflow_dispatch:
@@ -14,56 +14,28 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: FULL DEBUG STRUCTURE
-        run: |
-          echo "===== ROOT ====="
-          pwd
-          ls -R
-
-      - name: Check MACRO folder
-        run: |
-          if [ ! -d "MACRO" ]; then
-            echo "❌ MACRO FOLDER NOT FOUND"
-            exit 1
-          fi
-
-      - name: Check logo file
-        run: |
-          if [ ! -f "MACRO/assetslogo.png" ]; then
-            echo "❌ LOGO NOT FOUND IN MACRO/assetslogo.png"
-            exit 1
-          fi
-
       - name: Install ImageMagick
         run: |
           sudo apt-get update
           sudo apt-get install -y imagemagick
 
-      - name: Process images
+      - name: Apply watermark
         run: |
-          cd MACRO
+          LOGO="./assetslogo.png"
 
-          COUNT=$(find . -type f -iname "*.jpg" | wc -l)
-          echo "IMAGES FOUND: $COUNT"
+          test -f "$LOGO" || (echo "LOGO NOT FOUND" && exit 1)
 
-          if [ "$COUNT" -eq 0 ]; then
-            echo "❌ NO IMAGES FOUND"
-            exit 1
-          fi
+          find "./AUTO 3" -type f \( -iname "*.jpg" -o -iname "*.png" \) | while read img; do
+            echo "Processing: $img"
 
-          find . -type f -iname "*.jpg" | while read img; do
-            echo "Processing $img"
-
-            magick "$img" assetslogo.png \
+            magick "$img" "$LOGO" \
               -gravity southeast \
               -geometry +15+15 \
               -composite "$img"
           done
 
-      - name: Commit
+      - name: Commit changes
         run: |
-          cd MACRO
-
           git config user.name "github-actions"
           git config user.email "actions@github.com"
 
@@ -71,5 +43,5 @@ jobs:
 
           git diff --cached --quiet && echo "NO CHANGES" && exit 0
 
-          git commit -m "watermark debug"
+          git commit -m "watermark applied"
           git push
