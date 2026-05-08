@@ -1,20 +1,33 @@
 name: Applica Watermark
-on: [workflow_dispatch] # Si attiva quando clicchi tu il tasto
+
+on:
+  workflow_dispatch: # Questo permette di avviarlo a mano
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
-      - uses: actions/checkout@v4
-      - setup-python@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - run: pip install Pillow
-      - run: python watermark.py
-      - name: Salva Foto
+
+      - name: Install Pillow
+        run: pip install Pillow
+
+      - name: Esegui Script Watermark
+        run: python watermark.py
+
+      - name: Salva le foto modificate
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add AUTO3_PRONTE/
-          git commit -m "Watermark applicato"
+          git commit -m "Watermark applicato con successo" || echo "Nessuna modifica da caricare"
           git push
