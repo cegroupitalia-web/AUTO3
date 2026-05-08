@@ -1,19 +1,19 @@
 import os
 from PIL import Image, ImageDraw, ImageFont
 
-def applica_tutto():
+def applica_watermark_finale():
     base_path = os.getcwd()
     watermark_path = os.path.join(base_path, 'watermark.png')
     testo_pattern = "cegroupitalia"
 
-    print("--- INIZIO ELABORAZIONE (LOGO 5% + PATTERN TESTO) ---")
+    print("--- AVVIO ELABORAZIONE: LOGO SINGOLO (10%) + PATTERN TESTO DECISO ---")
 
-    # Carichiamo il logo
+    # 1. Prepariamo il logo singolo
     wm_logo = None
     if os.path.exists(watermark_path):
         wm_logo = Image.open(watermark_path).convert("RGBA")
     else:
-        print("AVVISO: watermark.png non trovato!")
+        print("ERRORE: watermark.png non trovato!")
 
     count = 0
     for root, dirs, files in os.walk(base_path):
@@ -26,44 +26,55 @@ def applica_tutto():
                 
                 try:
                     with Image.open(img_path).convert("RGBA") as base:
-                        # --- 1. PATTERN TESTO (MOLTO LEGGERO) ---
+                        
+                        # --- A. CREAZIONE PATTERN TESTO (PIÙ GRANDE E ACCENTUATO) ---
                         txt_layer = Image.new('RGBA', base.size, (0,0,0,0))
                         d = ImageDraw.Draw(txt_layer)
                         
-                        font_size = int(base.width * 0.03) 
-                        colore_testo = (0, 0, 0, 25) # Opacità leggermente ridotta (più elegante)
+                        # Font più grande (5% della larghezza foto invece di 3%)
+                        font_size = int(base.width * 0.05) 
+                        # Opacità aumentata a 60 (più visibile)
+                        colore_testo = (0, 0, 0, 60) 
                         
                         try:
+                            # Carica font standard
                             font = ImageFont.load_default()
                         except:
                             font = ImageFont.load_default()
 
-                        for x in range(0, base.width, font_size * 6):
+                        # Distribuiamo le scritte con più spazio per non affollare
+                        for x in range(0, base.width, font_size * 5):
                             for y in range(0, base.height, font_size * 4):
-                                shift = (y // (font_size * 4)) % 2 * (font_size * 3)
+                                shift = (y // (font_size * 4)) % 2 * (font_size * 2)
                                 d.text((x + shift, y), testo_pattern, fill=colore_testo, font=font)
                         
+                        # Fondiamo il testo sulla foto
                         base = Image.alpha_composite(base, txt_layer)
 
-                        # --- 2. LOGO RIDOTTO AL 5% (DIMEZZATO) ---
+                        # --- B. APPLICAZIONE LOGO SINGOLO (10%) ---
                         if wm_logo:
-                            # 0.05 significa il 5% della larghezza della foto
-                            w_width = int(base.width * 0.05)
+                            # Dimensione impostata al 10%
+                            w_width = int(base.width * 0.10)
                             w_height = int(wm_logo.height * (w_width / wm_logo.width))
                             wm_resized = wm_logo.resize((w_width, w_height), Image.Resampling.LANCZOS)
                             
-                            # Posizione in basso a destra con margine di 20px
-                            pos = (base.width - w_width - 20, base.height - w_height - 20)
+                            # Posizione UNICA: Basso a destra
+                            pos = (base.width - w_width - 30, base.height - w_height - 30)
                             base.paste(wm_resized, pos, wm_resized)
 
-                        # --- 3. SALVATAGGIO ---
-                        base.convert("RGB").save(img_path, "JPEG", quality=85)
-                        print(f"OK: {file}")
+                        # --- C. SALVATAGGIO ---
+                        # Convertiamo in RGB per salvare come JPEG
+                        base.convert("RGB").save(img_path, "JPEG", quality=90)
+                        print(f"Completata: {file}")
                         count += 1
                         
                 except Exception as e:
                     print(f"Errore su {file}: {e}")
 
+    print(f"--- FINE --- Elaborati {count} file con successo.")
+
+if __name__ == "__main__":
+    applica_watermark_finale()
     print(f"--- FINE --- Elaborati {count} file.")
 
 if __name__ == "__main__":
