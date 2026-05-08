@@ -21,13 +21,13 @@ jobs:
       - name: Install Pillow
         run: pip install Pillow
 
-      - name: Esegui Script Watermark
+      - name: Esegui Script
         run: python watermark.py
 
-      - name: Salva i cambiamenti
+      - name: Commit e Push
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add .
-          git commit -m "Watermark applicato a tutti i prodotti" || echo "Nessuna modifica"
-          git push
+          git add -A
+          git commit -m "Aggiornamento Watermark $(date +'%Y-%m-%d %H:%M:%S')" || exit 0
+          git push --force origin main
