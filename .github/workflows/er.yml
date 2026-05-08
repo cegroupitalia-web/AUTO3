@@ -1,4 +1,4 @@
-name: Watermark Images
+name: Watermark TEST
 
 on:
   workflow_dispatch:
@@ -19,26 +19,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y imagemagick
 
-      - name: Apply watermark (SAFE MODE)
+      - name: Apply TEXT watermark
         run: |
-          LOGO="$GITHUB_WORKSPACE/assetslogo.png"
+          find "./AUTO 3" -type f \( -iname "*.jpg" -o -iname "*.png" \) | while read img; do
+            echo "Processing: $img"
 
-          if [ ! -f "$LOGO" ]; then
-            echo "LOGO NOT FOUND"
-            exit 1
-          fi
-
-          find "$GITHUB_WORKSPACE/AUTO 3" -type f \( -iname "*.jpg" -o -iname "*.png" \) | while read img; do
-            echo "Processing $img"
-
-            TMP="${img}_tmp.jpg"
-
-            magick "$img" "$LOGO" \
+            magick "$img" \
               -gravity southeast \
-              -geometry +25+25 \
-              -composite "$TMP"
-
-            mv "$TMP" "$img"
+              -fill "red" \
+              -pointsize 40 \
+              -annotate +10+10 "TEST WATERMARK" \
+              "$img"
           done
 
       - name: Commit changes
@@ -50,5 +41,5 @@ jobs:
 
           git diff --cached --quiet && echo "NO CHANGES" && exit 0
 
-          git commit -m "watermark applied"
+          git commit -m "test watermark"
           git push
