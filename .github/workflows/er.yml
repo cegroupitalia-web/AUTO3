@@ -14,20 +14,35 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Show repo structure (DEBUG)
+        run: |
+          echo "=== FULL STRUCTURE ==="
+          ls -R
+
       - name: Install ImageMagick
         run: |
           sudo apt-get update
           sudo apt-get install -y imagemagick
 
-      - name: Apply watermark
+      - name: Run watermark
         run: |
-          cd MACRO
+          cd MACRO || (echo "MACRO NOT FOUND" && exit 1)
 
           LOGO="../assetslogo.png"
 
-          test -f "$LOGO" || (echo "LOGO NOT FOUND" && exit 1)
+          if [ ! -f "$LOGO" ]; then
+            echo "LOGO NOT FOUND: $LOGO"
+            exit 1
+          fi
 
-          find . -type f -iname "*.jpg" | while read img; do
+          FILES=$(find . -type f -iname "*.jpg")
+
+          if [ -z "$FILES" ]; then
+            echo "NO IMAGES FOUND"
+            exit 1
+          fi
+
+          echo "$FILES" | while read img; do
             echo "Processing $img"
 
             magick "$img" "$LOGO" \
@@ -36,7 +51,7 @@ jobs:
               -composite "$img" || echo "FAILED $img"
           done
 
-      - name: Commit changes
+      - name: Commit
         run: |
           cd MACRO
 
