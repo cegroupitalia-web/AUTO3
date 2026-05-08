@@ -1,4 +1,4 @@
-name: WATERMARK DEBUG FINAL
+name: Watermark AUTO3 FINAL
 
 on:
   workflow_dispatch:
@@ -14,43 +14,32 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install tools
+      - name: Install ImageMagick
         run: |
           sudo apt-get update
           sudo apt-get install -y imagemagick
 
-      - name: DEBUG 1 - show folder
+      - name: Apply watermark
         run: |
-          echo "=== ROOT STRUCTURE ==="
-          ls -R
-
-      - name: DEBUG 2 - find images
-        run: |
-          echo "=== SEARCHING IMAGES ==="
-          find ./AUTO3 -type f -iname "*.jpg" -print
-
-      - name: APPLY WATERMARK (TEST)
-        run: |
-          echo "=== APPLYING ==="
-
-          find ./AUTO3 -type f -iname "01.jpg" | while read img; do
-            echo "FOUND IMAGE: $img"
+          find "AUTO3" -type f \( -iname "*.jpg" -o -iname "*.png" \) | while read img; do
+            echo "Processing: $img"
 
             magick "$img" \
               -gravity southeast \
-              -fill red \
-              -pointsize 60 \
-              -annotate +10+10 "TEST_OK" \
+              -fill "red" \
+              -pointsize 55 \
+              -annotate +10+10 "TEST WATERMARK" \
               "$img"
-
-            echo "DONE: $img"
           done
 
-      - name: VERIFY CHANGE
+      - name: Commit changes
         run: |
-          echo "=== CHECK IF FILES CHANGED ==="
-          git status
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+          git add -A
+
           git diff --cached --quiet && echo "NO CHANGES" && exit 0
 
-          git commit -m "watermark fixed"
+          git commit -m "watermark final"
           git push
