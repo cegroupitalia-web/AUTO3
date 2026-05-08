@@ -12,8 +12,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -23,13 +21,13 @@ jobs:
       - name: Install Pillow
         run: pip install Pillow
 
-      - name: Esegui Script Watermark
+      - name: Esegui Script
         run: python watermark.py
 
-      - name: Forza salvataggio modifiche
+      - name: Commit e Push
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add -A
-          git commit -m "REFRESH TOTALE WATERMARK" || exit 0
+          git commit -m "Aggiornamento Watermark $(date +'%Y-%m-%d %H:%M:%S')" || exit 0
           git push --force origin main
