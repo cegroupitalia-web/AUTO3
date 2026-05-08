@@ -1,38 +1,77 @@
-name: Applica Watermark
+import os
+from PIL import Image, ImageDraw, ImageFont
 
-on:
-  workflow_dispatch:
+def applica_watermark_finale():
+    base_path = os.getcwd()
+    watermark_path = os.path.join(base_path, 'watermark.png')
+    testo_pattern = "cegroupitalia"
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    print("--- AVVIO ELABORAZIONE: LOGO SINGOLO (10%) + PATTERN TESTO DECISO ---")
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Scarica tutta la cronologia per evitare conflitti
+    # 1. Prepariamo il logo singolo
+    wm_logo = None
+    if os.path.exists(watermark_path):
+        wm_logo = Image.open(watermark_path).convert("RGBA")
+    else:
+        print("ERRORE: watermark.png non trovato!")
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
+    count = 0
+    for root, dirs, files in os.walk(base_path):
+        if '.git' in root or '.github' in root:
+            continue
+            
+        for file in files:
+            if file.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')) and file != 'watermark.png':
+                img_path = os.path.join(root, file)
+                
+                try:
+                    with Image.open(img_path).convert("RGBA") as base:
+                        
+                        # --- A. CREAZIONE PATTERN TESTO (PIÙ GRANDE E ACCENTUATO) ---
+                        txt_layer = Image.new('RGBA', base.size, (0,0,0,0))
+                        d = ImageDraw.Draw(txt_layer)
+                        
+                        # Font più grande (5% della larghezza foto invece di 3%)
+                        font_size = int(base.width * 0.05) 
+                        # Opacità aumentata a 60 (più visibile)
+                        colore_testo = (0, 0, 0, 60) 
+                        
+                        try:
+                            # Carica font standard
+                            font = ImageFont.load_default()
+                        except:
+                            font = ImageFont.load_default()
 
-      - name: Install Pillow
-        run: pip install Pillow
+                        # Distribuiamo le scritte con più spazio per non affollare
+                        for x in range(0, base.width, font_size * 5):
+                            for y in range(0, base.height, font_size * 4):
+                                shift = (y // (font_size * 4)) % 2 * (font_size * 2)
+                                d.text((x + shift, y), testo_pattern, fill=colore_testo, font=font)
+                        
+                        # Fondiamo il testo sulla foto
+                        base = Image.alpha_composite(base, txt_layer)
 
-      - name: Esegui Script Watermark
-        run: python watermark.py
+                        # --- B. APPLICAZIONE LOGO SINGOLO (10%) ---
+                        if wm_logo:
+                            # Dimensione impostata al 10%
+                            w_width = int(base.width * 0.10)
+                            w_height = int(wm_logo.height * (w_width / wm_logo.width))
+                            wm_resized = wm_logo.resize((w_width, w_height), Image.Resampling.LANCZOS)
+                            
+                            # Posizione UNICA: Basso a destra
+                            pos = (base.width - w_width - 30, base.height - w_height - 30)
+                            base.paste(wm_resized, pos, wm_resized)
 
-      - name: Salva i cambiamenti
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add .
-          git commit -m "Watermark applicato a tutti i prodotti" || echo "Nessuna modifica"
-          # Sincronizza con il server prima di caricare
-          git pull --rebase origin main
-          # Carica tutto forzatamente
-          git push --force origin main
+                        # --- C. SALVATAGGIO ---
+                        # Convertiamo in RGB per salvare come JPEG
+                        base.convert("RGB").save(img_path, "JPEG", quality=90)
+                        print(f"Completata: {file}")
+                        count += 1
+                        
+                except Exception as e:
+                    print(f"Errore su {file}: {e}")
+
+    print(f"--- FINE --- Elaborati {count} file con successo.")
+
+if __name__ == "__main__":
+    applica_watermark_finale()
