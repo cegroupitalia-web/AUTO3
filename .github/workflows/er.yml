@@ -1,4 +1,4 @@
-name: Watermark FIX REAL
+name: WATERMARK DEBUG FINAL
 
 on:
   workflow_dispatch:
@@ -14,35 +14,42 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install ImageMagick
+      - name: Install tools
         run: |
           sudo apt-get update
           sudo apt-get install -y imagemagick
 
-      - name: Apply watermark (SAFE)
+      - name: DEBUG 1 - show folder
         run: |
-          find "./AUTO3" -type f -iname "01.jpg" | while read img; do
-            echo "Processing: $img"
+          echo "=== ROOT STRUCTURE ==="
+          ls -R
 
-            TMP="${img}.tmp.jpg"
+      - name: DEBUG 2 - find images
+        run: |
+          echo "=== SEARCHING IMAGES ==="
+          find ./AUTO3 -type f -iname "*.jpg" -print
+
+      - name: APPLY WATERMARK (TEST)
+        run: |
+          echo "=== APPLYING ==="
+
+          find ./AUTO3 -type f -iname "01.jpg" | while read img; do
+            echo "FOUND IMAGE: $img"
 
             magick "$img" \
               -gravity southeast \
-              -fill "red" \
-              -pointsize 50 \
-              -annotate +10+10 "TEST WATERMARK" \
-              "$TMP"
+              -fill red \
+              -pointsize 60 \
+              -annotate +10+10 "TEST_OK" \
+              "$img"
 
-            mv "$TMP" "$img"
+            echo "DONE: $img"
           done
 
-      - name: Commit changes
+      - name: VERIFY CHANGE
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-
-          git add -A
-
+          echo "=== CHECK IF FILES CHANGED ==="
+          git status
           git diff --cached --quiet && echo "NO CHANGES" && exit 0
 
           git commit -m "watermark fixed"
