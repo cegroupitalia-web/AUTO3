@@ -19,22 +19,26 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y imagemagick
 
-      - name: Apply watermark
+      - name: Apply watermark (SAFE MODE)
         run: |
           LOGO="$GITHUB_WORKSPACE/assetslogo.png"
 
           if [ ! -f "$LOGO" ]; then
-            echo "❌ LOGO NOT FOUND: $LOGO"
+            echo "LOGO NOT FOUND"
             exit 1
           fi
 
           find "$GITHUB_WORKSPACE/AUTO 3" -type f \( -iname "*.jpg" -o -iname "*.png" \) | while read img; do
-            echo "Processing: $img"
+            echo "Processing $img"
+
+            TMP="${img}_tmp.jpg"
 
             magick "$img" "$LOGO" \
               -gravity southeast \
-              -geometry +15+15 \
-              -composite "$img"
+              -geometry +25+25 \
+              -composite "$TMP"
+
+            mv "$TMP" "$img"
           done
 
       - name: Commit changes
