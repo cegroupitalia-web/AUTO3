@@ -19,29 +19,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y imagemagick
 
-      - name: Debug files
-        run: |
-          echo "=== ROOT ==="
-          ls -R
-
-      - name: Apply watermark safely
+      - name: Apply watermark
         run: |
           cd MACRO
 
           LOGO="../assetslogo.png"
 
-          if [ ! -f "$LOGO" ]; then
-            echo "LOGO NOT FOUND"
-            exit 1
-          fi
+          test -f "$LOGO" || (echo "LOGO NOT FOUND" && exit 1)
 
           find . -type f -iname "*.jpg" | while read img; do
-            echo "Processing: $img"
+            echo "Processing $img"
 
-            convert "$img" "$LOGO" \
+            magick "$img" "$LOGO" \
               -gravity southeast \
               -geometry +15+15 \
-              -composite "$img" || echo "FAILED: $img"
+              -composite "$img" || echo "FAILED $img"
           done
 
       - name: Commit changes
@@ -53,10 +45,7 @@ jobs:
 
           git add -A
 
-          if git diff --cached --quiet; then
-            echo "NO CHANGES"
-            exit 0
-          fi
+          git diff --cached --quiet && echo "NO CHANGES" && exit 0
 
           git commit -m "watermark applied"
           git push
