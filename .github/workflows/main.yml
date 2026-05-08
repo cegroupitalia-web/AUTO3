@@ -1,7 +1,7 @@
 name: Applica Watermark
 
 on:
-  workflow_dispatch: # Questo permette di avviarlo a mano
+  workflow_dispatch:
 
 jobs:
   build:
@@ -21,13 +21,18 @@ jobs:
       - name: Install Pillow
         run: pip install Pillow
 
-      - name: Esegui Script Watermark
+      - name: Esegui Script
         run: python watermark.py
 
-      - name: Salva le foto modificate
+      - name: Salva le foto
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add AUTO3_PRONTE/
-          git commit -m "Watermark applicato con successo" || echo "Nessuna modifica da caricare"
-          git push
+          # Il comando qui sotto non darà errore se la cartella non esiste
+          if [ -d "AUTO3_PRONTE" ]; then
+            git add AUTO3_PRONTE/
+            git commit -m "Watermark aggiunto"
+            git push
+          else
+            echo "La cartella AUTO3_PRONTE non è stata creata. Controlla i log dello script Python sopra."
+          fi
