@@ -24,15 +24,10 @@ jobs:
       - name: Esegui Script
         run: python watermark.py
 
-      - name: Salva le foto
+      - name: Salva modifiche in AUTO3
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          # Il comando qui sotto non darà errore se la cartella non esiste
-          if [ -d "AUTO3_PRONTE" ]; then
-            git add AUTO3_PRONTE/
-            git commit -m "Watermark aggiunto"
-            git push
-          else
-            echo "La cartella AUTO3_PRONTE non è stata creata. Controlla i log dello script Python sopra."
-          fi
+          git add AUTO3/
+          git commit -m "Watermark applicato e file sovrascritti" || echo "Nessuna modifica"
+          git push
