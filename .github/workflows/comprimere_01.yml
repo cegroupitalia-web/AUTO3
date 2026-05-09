@@ -1,42 +1,35 @@
-import os
-from PIL import Image
+name: ComprimeFoto01
 
-def compressione_50_percento():
-    target_dir = os.path.join(os.getcwd(), "AUTO3")
-    
-    if not os.path.exists(target_dir):
-        print(f"Errore: La cartella {target_dir} non esiste!")
-        return
+on:
+  workflow_dispatch:
 
-    count = 0
-    for root, dirs, files in os.walk(target_dir):
-        for file in files:
-            nome, est = os.path.splitext(file)
-            
-            # Colpiamo solo i file "01"
-            if nome == "01" and est.lower() in ('.jpg', '.jpeg', '.png', '.webp'):
-                path_completo = os.path.join(root, file)
-                
-                try:
-                    with Image.open(path_completo) as img:
-                        # Convertiamo in RGB per risparmiare spazio rispetto a RGBA
-                        if img.mode in ("RGBA", "P"):
-                            img = img.convert("RGB")
-                        
-                        # --- RIDUZIONE DEL 50% ---
-                        nuova_larghezza = int(img.width * 0.50)
-                        nuova_altezza = int(img.height * 0.50)
-                        img = img.resize((nuova_larghezza, nuova_altezza), Image.Resampling.LANCZOS)
-                        
-                        # Salvataggio con qualità 40 (molto compressa)
-                        img.save(path_completo, "JPEG", quality=40, optimize=True, progressive=True)
-                        
-                        print(f"DIMEZZATA: {path_completo} ({nuova_larghezza}x{nuova_altezza})")
-                        count += 1
-                except Exception as e:
-                    print(f"Errore su {file}: {e}")
+jobs:
+  compression_job:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
-    print(f"\n--- FINE --- {count} immagini ridotte del 50%.")
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-if __name__ == "__main__":
-    compressione_50_percento()
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Pillow
+        run: pip install Pillow
+
+      - name: Esegui Script Compressione
+        run: python compress_01.py
+
+      - name: Commit e Push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git commit -m "Compressione immagini 01 eseguita" || exit 0
+          git fetch origin main
+          git pull --rebase origin main
+          git push origin main
