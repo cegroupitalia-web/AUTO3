@@ -1,4 +1,4 @@
-name: "Z-SYSTEM - Comprimere Solo Foto 01"
+name: ComprimeFoto01
 
 on:
   workflow_dispatch:
