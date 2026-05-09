@@ -1,42 +1,47 @@
 import os
 from PIL import Image
 
-def comprimi_solo_01():
-    base_path = os.getcwd()
+def compressione_estrema():
+    target_dir = os.path.join(os.getcwd(), "AUTO3")
     
-    # Estensioni supportate
-    valid_extensions = ('.jpg', '.jpeg', '.png', '.webp')
-    
-    count = 0
-    print(f"Inizio scansione in: {base_path}")
+    if not os.path.exists(target_dir):
+        print(f"Errore: La cartella {target_dir} non esiste!")
+        return
 
-    for root, dirs, files in os.walk(base_path):
-        # Evita le cartelle di sistema di GitHub
-        if '.git' in root or '.github' in root:
-            continue
-            
+    count = 0
+    # Larghezza massima desiderata (es. 1200 pixel) per risparmiare peso
+    MAX_WIDTH = 1200 
+
+    for root, dirs, files in os.walk(target_dir):
         for file in files:
-            nome_file, ext = os.path.splitext(file)
+            nome, est = os.path.splitext(file)
             
-            # FILTRO CRITICO: Solo file che si chiamano esattamente '01'
-            if nome_file == '01' and ext.lower() in valid_extensions:
-                file_path = os.path.join(root, file)
+            if nome == "01" and est.lower() in ('.jpg', '.jpeg', '.png', '.webp'):
+                path_completo = os.path.join(root, file)
                 
                 try:
-                    with Image.open(file_path) as img:
-                        # Se è un PNG con trasparenza, lo convertiamo in RGB per comprimerlo meglio
+                    with Image.open(path_completo) as img:
+                        # 1. Convertiamo in RGB (toglie la trasparenza pesante dei PNG)
                         if img.mode in ("RGBA", "P"):
                             img = img.convert("RGB")
                         
-                        # Comprimiamo con qualità 70 (ottimo bilanciamento peso/qualità)
-                        img.save(file_path, "JPEG", quality=70, optimize=True)
+                        # 2. Ridimensionamento proporzionale (se l'immagine è più grande di MAX_WIDTH)
+                        if img.width > MAX_WIDTH:
+                            w_percent = (MAX_WIDTH / float(img.width))
+                            h_size = int((float(img.height) * float(w_percent)))
+                            img = img.resize((MAX_WIDTH, h_size), Image.Resampling.LANCZOS)
                         
-                    print(f"COMPRESSO: {file_path}")
-                    count += 1
+                        # 3. Salvataggio con Qualità molto bassa (30) e ottimizzazione
+                        # progressive=True rende il caricamento web più fluido
+                        img.save(path_completo, "JPEG", quality=30, optimize=True, progressive=True)
+                        
+                        print(f"ESTREMA: {path_completo} (Ridotta a {MAX_WIDTH}px)")
+                        count += 1
                 except Exception as e:
                     print(f"Errore su {file}: {e}")
 
-    print(f"--- FINE --- Totale immagini '01' compresse: {count}")
+    print(f"\n--- COMPRESSIONE MASSIMA ULTIMATA ---")
+    print(f"Immagini '01' polverizzate: {count}")
 
 if __name__ == "__main__":
-    comprimi_solo_01()
+    compressione_estrema()
