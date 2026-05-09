@@ -1,16 +1,35 @@
-- name: Commit e Push delle modifiche
+name: "Z-SYSTEM - Comprimere Solo Foto 01"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  compression_job:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Pillow
+        run: pip install Pillow
+
+      - name: Esegui Script Compressione
+        run: python compress_01.py
+
+      - name: Commit e Push
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add -A
-          # Il comando || exit 0 evita che la Action fallisca se non ci sono foto da comprimere
-          git commit -m "Compressione automatica immagini 01" || exit 0
-          
-          # 1. Recupera le modifiche che sono online mentre la Action girava
+          git commit -m "Compressione immagini 01 eseguita" || exit 0
           git fetch origin main
-          
-          # 2. Sincronizza i cambiamenti (rebase) per evitare il conflitto
           git pull --rebase origin main
-          
-          # 3. Ora il push funzionerà senza errori
           git push origin main
